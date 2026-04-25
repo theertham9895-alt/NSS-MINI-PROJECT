@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Calendar, ClipboardCheck, 
-  Award, User, Users, LogOut, Settings
+  Award, User, Users, LogOut, Settings, Bell
 } from 'lucide-react';
 import Button from './Button';
 
 function Sidebar({ role }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(Number(localStorage.getItem('unreadNotifications') || 0));
 
   // Read real user data from localStorage
   const userName = localStorage.getItem('userName') || 'User';
@@ -19,6 +20,7 @@ function Sidebar({ role }) {
     { path: '/student/activities', label: 'Activities', icon: Calendar },
     { path: '/student/attendance', label: 'My Attendance', icon: ClipboardCheck },
     { path: '/student/certificates', label: 'Certificates', icon: Award },
+    { path: '/student/notifications', label: 'Notifications', icon: Bell },
     { path: '/student/profile', label: 'Profile', icon: User },
   ];
 
@@ -31,6 +33,14 @@ function Sidebar({ role }) {
   ];
 
   const links = role === 'student' ? studentLinks : coordinatorLinks;
+
+  useEffect(() => {
+    const handleCountUpdate = (event) => {
+      setUnreadCount(Number(event.detail || 0));
+    };
+    window.addEventListener('notifications:count', handleCountUpdate);
+    return () => window.removeEventListener('notifications:count', handleCountUpdate);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -66,6 +76,23 @@ function Sidebar({ role }) {
             >
               <Icon size={18} />
               {link.label}
+              {link.path === '/student/notifications' && unreadCount > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  minWidth: '20px',
+                  height: '20px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'var(--color-error)',
+                  color: 'white',
+                  fontSize: '11px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 6px'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -84,7 +111,7 @@ function Sidebar({ role }) {
         </div>
 
         <div className="sidebar-actions">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/coordinator/settings')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(role === 'student' ? '/student/profile' : '/coordinator/settings')}>
              <Settings size={16} />
              Settings
           </Button>

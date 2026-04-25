@@ -28,18 +28,45 @@ function StudentCertificates() {
     setLoading(false);
   };
 
-  const handleDownload = (cert) => {
+  const handleDownload = async (cert) => {
     if (!cert.fileUrl) {
       alert('⚠️ No certificate file uploaded yet. Please contact your coordinator.');
       return;
     }
-    const link = document.createElement('a');
-    link.href = `http://localhost:5000${cert.fileUrl}`;
-    link.target = '_blank';
-    link.download = `NSS_Certificate_${cert.title || 'certificate'}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    const token = localStorage.getItem('token');
+    try {
+      let res = await fetch(`http://localhost:5000/api/certificates/${cert._id}/download`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        // Fallback for older backend routes or temporary auth/route mismatch.
+        res = await fetch(`http://localhost:5000${cert.fileUrl}`);
+      }
+
+      if (!res.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await res.blob();
+      const contentDisposition = res.headers.get('content-disposition') || '';
+      const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)/i);
+      const fallbackExt = cert.fileUrl.split('.').pop();
+      const fallbackName = `NSS_Certificate_${cert.title || 'certificate'}${fallbackExt ? `.${fallbackExt}` : ''}`;
+      const filename = decodeURIComponent(filenameMatch?.[1] || fallbackName);
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      alert('Unable to download certificate right now. Please try again.');
+    }
   };
 
   if (loading) {

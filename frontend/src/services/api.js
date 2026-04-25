@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:5000/api';
+const HOST = window.location.hostname || 'localhost';
+const API_URL = process.env.REACT_APP_API_URL || `http://${HOST}:5000/api`;
 const getToken = () => localStorage.getItem('token');
 const authHeaders = () => ({
   'Content-Type': 'application/json',
@@ -78,6 +79,34 @@ export const getMyAttendance = async () => {
 export const markAttendance = async (eventId, studentId, status) => {
   try {
     const res = await fetch(`${API_URL}/attendance/mark`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ eventId, studentId, status }) });
+    return res.json();
+  } catch (err) { return { error: 'Server offline' }; }
+};
+
+export const getMyNotifications = async () => {
+  try {
+    const res = await fetch(`${API_URL}/notifications/my`, { headers: authHeaders() });
+    if (!res.ok) return [];
+    return res.json();
+  } catch (err) { return []; }
+};
+
+export const markNotificationRead = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    });
+    return res.json();
+  } catch (err) { return { error: 'Server offline' }; }
+};
+
+export const markAllNotificationsRead = async () => {
+  try {
+    const res = await fetch(`${API_URL}/notifications/read-all`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    });
     return res.json();
   } catch (err) { return { error: 'Server offline' }; }
 };
