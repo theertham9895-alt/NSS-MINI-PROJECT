@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { getStudents, getActivities } from '../services/api';
-import { Award, Plus, X, Trash2, Download, Eye } from 'lucide-react';
+import { Award, Plus, X, Trash2, Eye } from 'lucide-react';
 
 function CoordinatorCertificates() {
   const [showIssueForm, setShowIssueForm] = useState(false);

@@ -35,7 +35,7 @@ function Landing() {
     localStorage.setItem('userEmail', result.user.email);
 
     // Navigate based on role
-    if (result.user.role === 'admin') {
+    if (result.user.role === 'admin' || result.user.role === 'coordinator') {
       navigate('/coordinator');
     } else {
       navigate('/student');
